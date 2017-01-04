@@ -2,8 +2,6 @@
 # IP数据库格式详解 qqzeng-ip.dat
 # 编码：UTF8  字节序：Little-Endian
 # 返回多个字段信息（如：亚洲|中国|香港|九龙|油尖旺|新世界电讯|810200|Hong Kong|HK|114.17495|22.327115）
-# 此脚本为函数定义
-import struct, socket, os
 import pandas as pd
 
 import IP.IpFunction as f
@@ -23,30 +21,37 @@ ch = ip_origin.loc[ip_origin['country']=='中国']
 # 下面给出一些我在处理时的一些方式,在处理过程中可以随时将多余的列及时删除以节省内存
 
 # 首先将运营商长度超过12字节的处理成12字节
-ch['isp'] = [f.get_1isp(x) for x in ch['isp'].values]
-ch['isp'] = [f.cat_isp(x) for x in ch['isp'].values]
+# ch['isp'] = [f.get_1isp(x) for x in ch['isp'].values]
+ch.loc[:,('isp')] = [f.get_1isp(x) for x in ch['isp'].values]
+# ch['isp'] = [f.cat_isp(x) for x in ch['isp'].values]
+ch.loc[:,('isp')] = [f.cat_isp(x) for x in ch['isp'].values]
 # 处理运营商，非大陆的运营商可能有网站，而我们目前暂不需要
-ch['isp'] = [f.replace_com(x) for x in ch['isp'].values]
-
+# ch['isp'] = [f.replace_com(x) for x in ch['isp'].values]
+ch.loc[:,('isp')] = [f.replace_com(x) for x in ch['isp'].values]
 # 正常情况下将IP后面的所有内容返回
 # 定制情况可以根据不同的需求返回不同的内容，比如我们目前只需返回城市和运营商
-ch['content'] = ch['province']+'|'+ch['city']+"|"+ch['isp']
-
+# ch['content'] = ch['province']+'|'+ch['city']+"|"+ch['isp']
+ch.loc[:,('content')] = ch['province']+'|'+ch['city']+"|"+ch['isp']
 # 将地址中的*去掉以节省点空间，不去掉会很规整
-ch['content'] = [f.replace_star(x) for x in ch['content'].values]
+# ch['content'] = [f.replace_star(x) for x in ch['content'].values]
+ch.loc[:,('content')] = [f.replace_star(x) for x in ch['content'].values]
 # 将ip中的0去掉，便于转换
 for x in xrange(0,4):
-    ch['start_ip'] = [f.replace_all(x) for x in ch['start_ip'].values]
-    ch['end_ip'] = [f.replace_all(x) for x in ch['end_ip'].values]
+    # ch['start_ip'] = [f.replace_all(x) for x in ch['start_ip'].values]
+    # ch['end_ip'] = [f.replace_all(x) for x in ch['end_ip'].values]
+    ch.loc[:, ('start_ip')] = [f.replace_all(x) for x in ch['start_ip'].values]
+    ch.loc[:, ('end_ip')] = [f.replace_all(x) for x in ch['end_ip'].values]
 # 重置索引,删除多余的列
 ch = ch.reset_index()
 del ch['index']
 del ch['country'],ch['province'],ch['city'],ch['area'],ch['isp'],ch['timezone'],ch['ec'],ch['type']
 # 将地址保存起来，作为写成二进制的原始数据
 content = pd.DataFrame(ch['content'].unique(),columns=['content'])
-content['lenth'] = [len(x) for x in content['content'].values]
+# content['lenth'] = [len(x) for x in content['content'].values]
+content.loc[:, ('lenth')] = [len(x) for x in content['content'].values]
 # 设置地址的流地址
-content['loc'] = 16
+# content['loc'] = 16
+content.loc[:, ('loc')] = 16
 for i in xrange(1,len(content)):
     content['loc'][i] = content['loc'][i-1]+content['lenth'][i-1]
 

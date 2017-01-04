@@ -97,5 +97,5 @@ def set_loc(s,content):
 # 获取ip段的前缀
 def get_prefix(s):
     ns = s.split('.')
-    pre = ns[0]
+    pre = int(ns[0])
     return pre
